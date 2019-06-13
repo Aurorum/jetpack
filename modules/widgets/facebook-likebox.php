@@ -79,6 +79,7 @@ class WPCOM_Widget_Facebook_LikeBox extends WP_Widget {
 		$like_args['show_faces'] = (bool) $like_args['show_faces'] ? 'true' : 'false';
 		$like_args['stream']     = (bool) $like_args['stream'] ? 'true' : 'false';
 		$like_args['cover']      = (bool) $like_args['cover'] ? 'false' : 'true';
+		$like_args['title_link'] = (bool) $like_args['title_link'] ? 'false' : 'true';
 
 		echo $before_widget;
 
@@ -132,6 +133,7 @@ class WPCOM_Widget_Facebook_LikeBox extends WP_Widget {
 			'show_faces' => isset( $new_instance['show_faces'] ),
 			'stream'     => isset( $new_instance['stream'] ),
 			'cover'      => isset( $new_instance['cover'] ),
+			'title_link' => isset( $new_instance['title_link'] ),
 		);
 
 		$instance['like_args'] = $this->normalize_facebook_args( $instance['like_args'] );
@@ -207,6 +209,14 @@ class WPCOM_Widget_Facebook_LikeBox extends WP_Widget {
 			</label>
 		</p>
 
+		<p>
+			<label for="<?php echo esc_attr( $this->get_field_id( 'title_link' ) ); ?>">
+				<input type="checkbox" name="<?php echo esc_attr( $this->get_field_name( 'title_link' ) ); ?>" id="<?php echo esc_attr( $this->get_field_id( 'title_link' ) ); ?>" <?php checked( $like_args['title_link'] ); ?> />
+				<?php _e( 'Link Widget Title to Page', 'jetpack' ); ?>
+				<br />
+			</label>
+		</p>
+
 		<?php
 	}
 
@@ -248,6 +258,7 @@ class WPCOM_Widget_Facebook_LikeBox extends WP_Widget {
 		$args['show_faces'] = (bool) $args['show_faces'];
 		$args['stream']     = (bool) $args['stream'];
 		$args['cover']      = (bool) $args['cover'];
+		$args['title_link'] = (bool) $args['title_link'];
 
 		// The height used to be dependent on other widget settings
 		// If the user changes those settings but doesn't customize the height,
@@ -268,7 +279,11 @@ class WPCOM_Widget_Facebook_LikeBox extends WP_Widget {
 	function is_valid_facebook_url( $url ) {
 		return ( false !== strpos( $url, 'facebook.com' ) ) ? true : false;
 	}
-
+	
+	function jetpack_facebook_likebox_disable_titlelink( $likebox_widget_title, $title, $page_url, $args ) {
+		$likebox_widget_title = '<p href="' . esc_url( $page_url ) . '">' . esc_html( $title ) . '</p>';
+	}
+	
 	function normalize_int_value( $value, $default = 0, $max = 0, $min = 0 ) {
 		$value = (int) $value;
 
