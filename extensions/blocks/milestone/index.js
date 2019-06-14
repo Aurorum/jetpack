@@ -8,9 +8,7 @@ import { Fragment } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import './editor.scss';
 import edit from './edit';
-import save from './save';
 
 export const name = 'milestone';
 
