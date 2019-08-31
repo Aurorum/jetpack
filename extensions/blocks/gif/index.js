@@ -32,7 +32,7 @@ export const settings = {
 		_x( 'giphy', 'block search term', 'jetpack' ),
 		_x( 'image', 'block search term', 'jetpack' ),
 	],
-	description: __( 'Search for and insert an animated image.', 'jetpack' ),
+	description: __( 'Search test and insert an animated image.', 'jetpack' ),
 	attributes: {
 		align: {
 			type: 'string',
