@@ -218,7 +218,7 @@ To stay consistent with Gutenberg, your extensions should follow [Gutenberg styl
 
 Use Gutenberg color variables where possible by importing them in your stylesheet from `extensions/shared/styles/gutenberg-colors.scss`.
 
-The build pipeline also supports [Muriel colors](https://github.com/Automattic/color-studio) via SASS variables (`$muriel-pink-300`) and CSS custom properties (`var( --muriel-pink-300 )`) without specifically importing them first. Prefer CSS custom properties if possible.
+The build pipeline also supports [Studio colors](https://github.com/Automattic/color-studio) via SASS variables (`$studio-pink-30`) and CSS custom properties (`var( --studio-pink-30 )`) without specifically importing them first. Prefer CSS custom properties if possible.
 
 ### Icons
 
