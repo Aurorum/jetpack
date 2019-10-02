@@ -424,7 +424,7 @@ body,
 /* Admin Bar */
 
 #wpadminbar {
-	background: $color-primary;
+	background: $studio-wordpress-blue;
 	-webkit-box-shadow: none;
 	-mozilla-box-shadow: none;
 	height: 46px;
@@ -436,7 +436,7 @@ body,
 		}
 
 		&.hover > .ab-item {
-			background: $studio-blue-30 !important;
+			background: $studio-wordpress-blue-60 !important;
 			color: $white;
 		}
 	}
@@ -476,7 +476,7 @@ body,
 		> .ab-item,
 		&.hover > .ab-item,
 		&.ab-hover > .ab-item {
-			background: $_004967 !important;
+			background: $studio-wordpress-blue-80 !important;
 		}
 	}
 
@@ -520,7 +520,7 @@ body,
 	li#wp-admin-bar-notes {
 		&.active,
 		&.active > .ab-item {
-			background: $_004967 !important;
+			background: $studio-wordpress-blue-80 !important;
 		}
 
 		> #wpnt-notes-panel2 {
