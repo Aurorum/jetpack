@@ -16,7 +16,7 @@ class AmazonEdit extends Component {
 	 * @returns {object} The UI displayed when user edits this block.
 	 */
 	render() {
-		return <p>{ __( 'Block edit goes here', 'jetpack' ) }</p>;
+		return <p>{ __( 'Coming soon', 'jetpack' ) }</p>;
 	}
 }
 
