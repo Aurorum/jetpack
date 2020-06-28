@@ -1501,6 +1501,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 		$response = array(
 //			'othersLinked' => Jetpack::get_other_linked_admins(),
 			'currentUser'  => jetpack_current_user_data(),
+			'ownerData'    => jetpack_main_user_data(),
 		);
 		return rest_ensure_response( $response );
 	}
