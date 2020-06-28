@@ -527,3 +527,21 @@ function jetpack_current_user_data() {
 
 	return $current_user_data;
 }
+
+/**
+ * Gather data about the main user.
+ *
+ * @since 7.8.0
+ *
+ * @return array
+ */
+function jetpack_main_user_data() {
+	$owner_user      = Jetpack_Options::get_option( 'master_user' );
+	$owner_user_data = new WP_User( $owner_user );
+
+	$owner_user_name = array(
+		'displayName' =>  $owner_user_data->display_name,
+	);
+
+	return $owner_user_name;
+}
