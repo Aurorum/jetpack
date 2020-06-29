@@ -485,9 +485,11 @@ class Jetpack_React_Page extends Jetpack_Admin_Page {
  * @return array
  */
 function jetpack_current_user_data() {
-	$current_user   = wp_get_current_user();
-	$is_master_user = $current_user->ID == Jetpack_Options::get_option( 'master_user' );
-	$dotcom_data    = Jetpack::get_connected_user_data();
+	$current_user     = wp_get_current_user();
+	$connection_owner = Jetpack_Options::get_option( 'master_user' );
+	$is_master_user   = $current_user->ID == $connection_owner;
+	$dotcom_data      = Jetpack::get_connected_user_data();
+	$owner_user_data  = new WP_User( $connection_owner );
 
 	// Add connected user gravatar to the returned dotcom_data.
 	$dotcom_data['avatar'] = ( ! empty( $dotcom_data['email'] ) ?
@@ -501,13 +503,14 @@ function jetpack_current_user_data() {
 		: false );
 
 	$current_user_data = array(
-		'isConnected' => Jetpack::is_user_connected( $current_user->ID ),
-		'isMaster'    => $is_master_user,
-		'username'    => $current_user->user_login,
-		'id'          => $current_user->ID,
-		'wpcomUser'   => $dotcom_data,
-		'gravatar'    => get_avatar_url( $current_user->ID, 64, 'mm', '', array( 'force_display' => true ) ),
-		'permissions' => array(
+		'isConnected'     => Jetpack::is_user_connected( $current_user->ID ),
+		'isMaster'        => $is_master_user,
+		'username'        => $current_user->user_login,
+		'id'              => $current_user->ID,
+		'wpcomUser'       => $dotcom_data,
+		'gravatar'        => get_avatar_url( $current_user->ID, 64, 'mm', '', array( 'force_display' => true ) ),
+		'connectionOwner' => $owner_user_data->display_name,
+		'permissions'     => array(
 			'admin_page'         => current_user_can( 'jetpack_admin_page' ),
 			'connect'            => current_user_can( 'jetpack_connect' ),
 			'disconnect'         => current_user_can( 'jetpack_disconnect' ),
