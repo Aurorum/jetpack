@@ -785,6 +785,11 @@ function sharing_display( $text = '', $echo = false ) {
 		$show = false;
 	}
 
+	// Is the post password protected?
+	if ( post_password_required( $post->ID ) ) {
+		$show = false;
+	}
+
 	/**
 	 * Filter the Sharing buttons' Ajax action name Jetpack checks for.
 	 * This allows the use of the buttons with your own Ajax implementation.
