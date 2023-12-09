@@ -45,7 +45,7 @@ class Jetpack_Blog_Stats_Widget extends WP_Widget {
 	}
 
 	/**
-	 * Remove the "Top Posts and Pages" widget from the Legacy Widget block
+	 * Remove the "Blog Stats" widget from the Legacy Widget block
 	 *
 	 * @param array $widget_types List of widgets that are currently removed from the Legacy Widget block.
 	 * @return array $widget_types New list of widgets that will be removed.
