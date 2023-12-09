@@ -36,7 +36,7 @@ class WPCOM_REST_API_V2_Endpoint_Blog_Stats extends WP_REST_Controller {
 						'post_id' => array(
 							'description'       => __( 'Post ID to obtain stats for.', 'jetpack' ),
 							'type'              => array( 'string', 'integer' ),
-							'required'          => true,
+							'required'          => false,
 							'validate_callback' => function ( $param ) {
 								return is_numeric( $param );
 							},

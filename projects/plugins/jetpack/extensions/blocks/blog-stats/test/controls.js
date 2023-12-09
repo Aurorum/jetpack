@@ -12,6 +12,7 @@ describe( 'BlogStatsControls', () => {
 	const defaultProps = {
 		attributes: defaultAttributes,
 		setAttributes,
+		postId: 999,
 	};
 
 	beforeEach( () => {
@@ -46,6 +47,12 @@ describe( 'BlogStatsControls', () => {
 			await user.click( screen.getByLabelText( 'This specific post' ) );
 
 			expect( setAttributes ).toHaveBeenCalledWith( { statsOption: 'post' } );
+		} );
+
+		test( 'hide settings for widgets', async () => {
+			render( <BlogStatsInspectorControls { ...{ ...defaultProps, postId: false } } /> );
+
+			expect( screen.queryByText( 'Settings' ) ).not.toBeInTheDocument();
 		} );
 	} );
 } );

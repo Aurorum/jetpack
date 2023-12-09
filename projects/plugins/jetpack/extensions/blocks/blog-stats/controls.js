@@ -1,7 +1,7 @@
 import { PanelBody, RadioControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-export function BlogStatsInspectorControls( { attributes, setAttributes } ) {
+export function BlogStatsInspectorControls( { attributes, setAttributes, postId } ) {
 	const { statsOption } = attributes;
 
 	const RADIO_OPTIONS = [
@@ -14,6 +14,11 @@ export function BlogStatsInspectorControls( { attributes, setAttributes } ) {
 			label: __( 'This specific post', 'jetpack' ),
 		},
 	];
+
+	// Hide settings when inserted as a widget.
+	if ( ! postId ) {
+		return;
+	}
 
 	return (
 		<>

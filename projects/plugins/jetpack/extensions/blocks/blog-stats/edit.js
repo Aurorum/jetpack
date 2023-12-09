@@ -17,7 +17,7 @@ function BlogStatsEdit( { attributes, className, setAttributes } ) {
 	useEffect( () => {
 		if ( isModuleActive ) {
 			apiFetch( {
-				path: `/wpcom/v2/blog-stats?post_id=${ postId }`,
+				path: postId ? `/wpcom/v2/blog-stats?post_id=${ postId }` : '/wpcom/v2/blog-stats',
 			} ).then( response => {
 				setStatsData( response );
 			} );
@@ -37,7 +37,11 @@ function BlogStatsEdit( { attributes, className, setAttributes } ) {
 	return (
 		<>
 			<InspectorControls>
-				<BlogStatsInspectorControls attributes={ attributes } setAttributes={ setAttributes } />
+				<BlogStatsInspectorControls
+					attributes={ attributes }
+					setAttributes={ setAttributes }
+					postId={ postId }
+				/>
 			</InspectorControls>
 
 			<div className={ className }>
