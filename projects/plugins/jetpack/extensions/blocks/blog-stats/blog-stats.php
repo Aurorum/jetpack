@@ -11,8 +11,8 @@ namespace Automattic\Jetpack\Extensions\Blog_Stats;
 
 use Automattic\Jetpack\Blocks;
 use Automattic\Jetpack\Connection\Manager as Connection_Manager;
-use Automattic\Jetpack\Status;
 use Automattic\Jetpack\Stats\WPCOM_Stats;
+use Automattic\Jetpack\Status;
 use Jetpack_Gutenberg;
 
 /**
