@@ -1,0 +1,14 @@
+/**
+ * Editor styles for Blog Stats
+ */
+
+.wp-block-jetpack-blog-stats {
+	.loading-stats {
+		// Same as Core placeholder opacity.
+		opacity: 0.62;
+	}
+
+	.components-placeholder__fieldset {
+		display: block;
+	}
+}
