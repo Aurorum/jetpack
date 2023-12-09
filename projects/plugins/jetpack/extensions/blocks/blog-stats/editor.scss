@@ -1,6 +1,4 @@
-/**
- * Editor styles for Blog Stats
- */
+@import '@automattic/jetpack-base-styles/gutenberg-base-styles';
 
 .wp-block-jetpack-blog-stats {
 	.loading-stats {
@@ -10,5 +8,9 @@
 
 	.components-placeholder__fieldset {
 		display: block;
+	}
+
+	&__notice {
+		color: $gray-600;
 	}
 }

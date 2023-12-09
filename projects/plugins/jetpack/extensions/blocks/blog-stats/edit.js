@@ -11,15 +11,21 @@ function BlogStatsEdit( { attributes, className, setAttributes } ) {
 	const { isLoadingModules, isChangingStatus, isModuleActive, changeStatus } =
 		useModuleStatus( 'stats' );
 	const { label, statsOption } = attributes;
+	const [ blogViews, setBlogViews ] = useState( null );
+	const [ postViews, setPostViews ] = useState();
+
 	const postId = useSelect( select => select( 'core/editor' ).getCurrentPostId(), [] );
-	const [ statsData, setStatsData ] = useState( null );
 
 	useEffect( () => {
 		if ( isModuleActive ) {
 			apiFetch( {
 				path: postId ? `/wpcom/v2/blog-stats?post_id=${ postId }` : '/wpcom/v2/blog-stats',
 			} ).then( response => {
-				setStatsData( response );
+				setBlogViews( response[ 'blog-views' ] );
+
+				// Display "12,345" as an obvious placeholder when we have no Post ID.
+				// Applies to widgets, FSE templates etc.
+				setPostViews( postId ? response[ 'post-views' ] : '12,345' );
 			} );
 		}
 	}, [ postId, isModuleActive ] );
@@ -37,21 +43,15 @@ function BlogStatsEdit( { attributes, className, setAttributes } ) {
 	return (
 		<>
 			<InspectorControls>
-				<BlogStatsInspectorControls
-					attributes={ attributes }
-					setAttributes={ setAttributes }
-					postId={ postId }
-				/>
+				<BlogStatsInspectorControls attributes={ attributes } setAttributes={ setAttributes } />
 			</InspectorControls>
 
 			<div className={ className }>
-				{ isLoadingModules || statsData === null ? (
+				{ isLoadingModules || blogViews === null ? (
 					<p className="loading-stats">{ __( 'Loading stats…', 'jetpack' ) }</p>
 				) : (
 					<p>
-						<span>
-							{ statsOption === 'post' ? statsData[ 'post-views' ] : statsData[ 'blog-views' ] }{ ' ' }
-						</span>
+						<span>{ statsOption === 'post' ? postViews : blogViews } </span>
 						<RichText
 							tagName="span"
 							placeholder={ _x( 'hits', 'Number of views, plural', 'jetpack' ) }

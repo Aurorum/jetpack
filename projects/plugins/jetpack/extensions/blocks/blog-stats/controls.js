@@ -1,7 +1,7 @@
 import { PanelBody, RadioControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-export function BlogStatsInspectorControls( { attributes, setAttributes, postId } ) {
+export function BlogStatsInspectorControls( { attributes, setAttributes } ) {
 	const { statsOption } = attributes;
 
 	const RADIO_OPTIONS = [
@@ -11,14 +11,9 @@ export function BlogStatsInspectorControls( { attributes, setAttributes, postId 
 		},
 		{
 			value: 'post',
-			label: __( 'This specific post', 'jetpack' ),
+			label: __( 'This individual post', 'jetpack' ),
 		},
 	];
-
-	// Hide settings when inserted as a widget.
-	if ( ! postId ) {
-		return;
-	}
 
 	return (
 		<>
@@ -29,6 +24,9 @@ export function BlogStatsInspectorControls( { attributes, setAttributes, postId 
 					onChange={ value => setAttributes( { statsOption: value } ) }
 					options={ RADIO_OPTIONS }
 				/>
+				<span className="wp-block-jetpack-blog-stats__notice">
+					{ __( 'Stats are delayed for up to 60 seconds.', 'jetpack' ) }
+				</span>
 			</PanelBody>
 		</>
 	);

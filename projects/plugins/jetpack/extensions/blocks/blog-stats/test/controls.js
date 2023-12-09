@@ -12,7 +12,6 @@ describe( 'BlogStatsControls', () => {
 	const defaultProps = {
 		attributes: defaultAttributes,
 		setAttributes,
-		postId: 999,
 	};
 
 	beforeEach( () => {
@@ -25,7 +24,7 @@ describe( 'BlogStatsControls', () => {
 
 			expect( screen.getByText( 'Settings' ) ).toBeInTheDocument();
 			expect( screen.getByLabelText( 'My whole site' ) ).toBeInTheDocument();
-			expect( screen.getByLabelText( 'This specific post' ) ).toBeInTheDocument();
+			expect( screen.getByLabelText( 'This individual post' ) ).toBeInTheDocument();
 		} );
 
 		test( 'defaults stats selection to whole site', () => {
@@ -38,21 +37,15 @@ describe( 'BlogStatsControls', () => {
 			const attributes = { statsOption: 'post' };
 			render( <BlogStatsInspectorControls { ...{ ...defaultProps, attributes } } /> );
 
-			expect( screen.getByLabelText( 'This specific post' ) ).toBeChecked();
+			expect( screen.getByLabelText( 'This individual post' ) ).toBeChecked();
 		} );
 
 		test( 'sets the statsOption attribute', async () => {
 			const user = userEvent.setup();
 			render( <BlogStatsInspectorControls { ...defaultProps } /> );
-			await user.click( screen.getByLabelText( 'This specific post' ) );
+			await user.click( screen.getByLabelText( 'This individual post' ) );
 
 			expect( setAttributes ).toHaveBeenCalledWith( { statsOption: 'post' } );
-		} );
-
-		test( 'hide settings for widgets', async () => {
-			render( <BlogStatsInspectorControls { ...{ ...defaultProps, postId: false } } /> );
-
-			expect( screen.queryByText( 'Settings' ) ).not.toBeInTheDocument();
 		} );
 	} );
 } );
