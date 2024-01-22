@@ -83,11 +83,11 @@ async function getIssueReferences( octokit, owner, repo, number, issueComments )
 	// Let's build a array with unique and correct support IDs, formatted properly.
 	const correctedSupportIds = new Set();
 	ticketReferences.map( reference => {
-		let supportId = reference;
+		let supportId = reference[ 0 ];
 
 		// xxx-zen is the preferred format for tickets.
 		// xxx-zd, as well as its uppercase version, is considered an alternate version.
-		const wrongId = supportId.match( /^([a-zA-Z0-9-]*)-zd$/i );
+		const wrongId = supportId.match( /^([0-9]*)-zd$/i );
 		if ( wrongId ) {
 			supportId = `${ wrongId[ 1 ] }-zen`;
 		}
