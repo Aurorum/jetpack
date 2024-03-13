@@ -2,7 +2,11 @@
  * External dependencies
  */
 import { useAiSuggestions } from '@automattic/jetpack-ai-client';
-import { isAtomicSite, isSimpleSite } from '@automattic/jetpack-shared-extension-utils';
+import {
+	isAtomicSite,
+	isSimpleSite,
+	useAnalytics,
+} from '@automattic/jetpack-shared-extension-utils';
 import { TextareaControl, ExternalLink, Button, Notice, BaseControl } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { PluginDocumentSettingPanel } from '@wordpress/edit-post';
@@ -22,7 +26,8 @@ import { AiExcerptControl } from '../../components/ai-excerpt-control';
  */
 import type { LanguageProp } from '../../../../blocks/ai-assistant/components/i18n-dropdown-control';
 import type { ToneProp } from '../../../../blocks/ai-assistant/components/tone-dropdown-control';
-import type { AiModelTypeProp } from '@automattic/jetpack-ai-client';
+import type { AiModelTypeProp, PromptProp } from '@automattic/jetpack-ai-client';
+import type * as EditorSelectors from '@wordpress/editor/store/selectors';
 
 import './style.scss';
 
@@ -40,13 +45,17 @@ type ContentLensMessageContextProps = {
 
 function AiPostExcerpt() {
 	const { excerpt, postId } = useSelect( select => {
-		const { getEditedPostAttribute, getCurrentPostId } = select( editorStore );
+		const { getEditedPostAttribute, getCurrentPostId } = select(
+			editorStore
+		) as typeof EditorSelectors;
 
 		return {
 			excerpt: getEditedPostAttribute( 'excerpt' ) ?? '',
 			postId: getCurrentPostId() ?? 0,
 		};
 	}, [] );
+
+	const { tracks } = useAnalytics();
 
 	const { editPost } = useDispatch( 'core/editor' );
 
@@ -101,7 +110,7 @@ function AiPostExcerpt() {
 	// Pick raw post content
 	const postContent = useSelect(
 		select => {
-			const content = select( editorStore ).getEditedPostContent();
+			const content = ( select( editorStore ) as typeof EditorSelectors ).getEditedPostContent();
 			if ( ! content ) {
 				return '';
 			}
@@ -158,7 +167,7 @@ ${ postContent }
 `,
 		};
 
-		const prompt = [
+		const prompt: PromptProp = [
 			{
 				role: 'jetpack-ai',
 				context: messageContext,
@@ -173,15 +182,24 @@ ${ postContent }
 		dequeueAiAssistantFeatureAyncRequest();
 
 		request( prompt, { feature: 'jetpack-ai-content-lens', model } );
+		tracks.recordEvent( 'jetpack_ai_assistant_block_generate', {
+			feature: 'jetpack-ai-content-lens',
+		} );
 	}
 
 	function setExcerpt() {
 		editPost( { excerpt: suggestion } );
+		tracks.recordEvent( 'jetpack_ai_assistant_block_accept', {
+			feature: 'jetpack-ai-content-lens',
+		} );
 		reset();
 	}
 
 	function discardExcerpt() {
 		editPost( { excerpt: excerpt } );
+		tracks.recordEvent( 'jetpack_ai_assistant_block_discard', {
+			feature: 'jetpack-ai-content-lens',
+		} );
 		reset();
 	}
 

@@ -28,8 +28,6 @@ export function handleIframeResult( eventFromIframe ) {
 }
 
 export function showModal( url ) {
-	window.scrollTo( 0, 0 );
-
 	// prevent double scroll bars. We use the entire viewport for the modal so we need to hide overflow on the body element.
 	document.body.classList.add( 'modal-open' );
 
@@ -42,12 +40,18 @@ export function showModal( url ) {
 	dialog.setAttribute( 'id', 'memberships-modal-window' );
 
 	const iframe = document.createElement( 'iframe' );
-	const siteLanguage = document.querySelector( 'input[name="lang"]' ).value;
+	const inputLanguage = document.querySelector( 'input[name="lang"]' );
+	let siteLanguage = null;
+	if ( inputLanguage ) {
+		siteLanguage = inputLanguage.value;
+	}
 	iframe.setAttribute( 'id', 'memberships-modal-iframe' );
 	iframe.innerText =
 		'This feature requires inline frames. You have iframes disabled or your browser does not support them.';
-	iframe.src =
-		url + '&display=alternate&lang=' + siteLanguage + '&jwt_token=' + getTokenFromCookie();
+	iframe.src = url + '&display=alternate&jwt_token=' + getTokenFromCookie();
+	if ( siteLanguage ) {
+		iframe.src = iframe.src + '&lang=' + siteLanguage;
+	}
 	iframe.setAttribute( 'frameborder', '0' );
 	iframe.setAttribute( 'allowtransparency', 'true' );
 	iframe.setAttribute( 'allowfullscreen', 'true' );
@@ -58,9 +62,6 @@ export function showModal( url ) {
 
 	window.addEventListener( 'message', handleIframeResult, false );
 	dialog.showModal();
-
-	// This line has to come after the modal has opened otherwise Firefox doesn't scroll to the top.
-	window.scrollTo( 0, 0 );
 }
 
 function setUpModal( button ) {
@@ -90,10 +91,10 @@ export const initializeMembershipButtons = selector => {
 	} );
 };
 
-const tokenCookieName = 'jp-premium-content-session';
+const tokenCookieName = 'wp-jp-premium-content-session';
 const getTokenFromCookie = function () {
 	const value = `; ${ document.cookie }`;
-	const parts = value.split( `; ${ tokenCookieName } = ` );
+	const parts = value.split( `; ${ tokenCookieName }=` );
 	if ( parts.length === 2 ) {
 		return parts.pop().split( ';' ).shift();
 	}
@@ -111,18 +112,9 @@ const updateQueryStringParameter = function ( uri, key, value ) {
 export const setPurchaseResultCookie = function ( premiumContentJWTToken ) {
 	// We will set this in a cookie  - just in case. This will be reloaded in the refresh, when user clicks OK.
 	// But user can close the browser window before clicking OK. IN that case, we want to leave a cookie behind.
-	const hostname = window.location.hostname;
-	const domain = '.' + hostname;
-
-	document.cookie =
-		'jp-premium-content-session' +
-		'=' +
-		premiumContentJWTToken +
-		'; expires=' +
-		0 +
-		'; path=/' +
-		'; domain=' +
-		domain;
+	const date = new Date();
+	const inOneMonthDate = new Date( date.setMonth( date.getMonth() + 1 ) );
+	document.cookie = `wp-jp-premium-content-session=${ premiumContentJWTToken }; expires=${ inOneMonthDate.toGMTString() }; path=/`;
 };
 
 export const reloadPageWithPremiumContentQueryString = function (

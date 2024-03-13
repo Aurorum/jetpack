@@ -58,6 +58,12 @@ export const variations = [
 		icon: <SocialIcon icon={ 'telegram' } size={ 24 } />,
 	},
 	{
+		name: 'threads',
+		attributes: { service: 'threads', label: 'Threads' },
+		title: 'Threads',
+		icon: <SocialIcon icon={ 'threads' } size={ 24 } />,
+	},
+	{
 		name: 'tumblr',
 		attributes: { service: 'tumblr', label: 'Tumblr' },
 		title: 'Tumblr',
@@ -72,9 +78,16 @@ export const variations = [
 	{
 		name: 'x',
 		attributes: { service: 'x', label: 'X' },
-		keywords: [ 'twitter' ],
+		keywords: [ 'twitter', 'x' ],
 		title: 'X',
 		icon: <SocialIcon icon={ 'x' } size={ 24 } />,
+	},
+	{
+		name: 'twitter',
+		attributes: { service: 'twitter', label: 'Twitter' },
+		keywords: [ 'twitter' ],
+		title: 'Twitter',
+		icon: <SocialIcon icon={ 'twitter' } size={ 24 } />,
 	},
 	{
 		name: 'nextdoor',

@@ -83,11 +83,6 @@ class Jetpack_Likes {
 
 		$active = Jetpack::get_active_modules();
 
-		if ( ! in_array( 'sharedaddy', $active, true ) && ! in_array( 'publicize', $active, true ) ) {
-			// we don't have a sharing page yet.
-			add_action( 'admin_menu', array( $this->settings, 'sharing_menu' ) );
-		}
-
 		if ( in_array( 'publicize', $active, true ) && ! in_array( 'sharedaddy', $active, true ) ) {
 			// we have a sharing page but not the global options area.
 			add_action( 'pre_admin_screen_sharing', array( $this->settings, 'sharing_block' ), 20 );
@@ -545,8 +540,14 @@ class Jetpack_Likes {
  * When it is set to 1, we enable likes on the post, regardless of the global setting.
  *
  * @param array $post - post data we're checking.
+ *
+ * @return bool
  */
 function jetpack_post_likes_get_value( array $post ) {
+	if ( ! isset( $post['id'] ) ) {
+		return false;
+	}
+
 	$post_likes_switched = get_post_meta( $post['id'], 'switch_like_status', true );
 
 	/** This filter is documented in modules/jetpack-likes-settings.php */

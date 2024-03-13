@@ -42,11 +42,18 @@ const sbconfig = {
 	// Workaround:
 	// https://github.com/storybookjs/storybook/issues/12270
 	webpackFinal: async config => {
-		// Remove ProgressPlugin and source maps in production builds.
+		// Remove source maps in production builds.
 		if ( process.env.NODE_ENV === 'production' ) {
 			config.devtool = false;
-			config.plugins = config.plugins.filter( p => p.constructor.name !== 'ProgressPlugin' );
 		}
+
+		// Remove minimization in dev builds.
+		if ( process.env.NODE_ENV !== 'production' ) {
+			config.optimization.minimize = false;
+		}
+
+		// Remove ProgressPlugin
+		config.plugins = config.plugins.filter( p => p.constructor.name !== 'ProgressPlugin' );
 
 		// Use esbuild to minify.
 		config.optimization.minimizer = [
@@ -87,6 +94,12 @@ const sbconfig = {
 			fileURLToPath( new URL( '../../../packages/search/src/dashboard/', import.meta.url ) )
 		);
 
+		// So packages don't need to be pre-built.
+		config.resolve.conditionNames = [
+			'jetpack:src',
+			...( config.resolve.conditionNames ?? [ '...' ] ),
+		];
+
 		config.resolve.alias = {
 			...config.resolve.alias,
 
@@ -95,6 +108,15 @@ const sbconfig = {
 			$features: path.join( __dirname, '../../../plugins/boost/app/assets/src/js/features' ),
 			$layout: path.join( __dirname, '../../../plugins/boost/app/assets/src/js/layout' ),
 			$svg: path.join( __dirname, '../../../plugins/boost/app/assets/src/js/svg' ),
+			$css: path.join( __dirname, '../../../plugins/boost/app/assets/src/css' ),
+			$images: path.join( __dirname, '../../../plugins/boost/app/assets/static/images' ),
+		};
+
+		// For tsc
+		config.resolve.extensionAlias = {
+			'.js': [ '.js', '.ts', '.tsx' ],
+			'.cjs': [ '.cjs', '.cts' ],
+			'.mjs': [ '.mjs', '.mts' ],
 		};
 
 		return config;

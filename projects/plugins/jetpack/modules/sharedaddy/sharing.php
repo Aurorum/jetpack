@@ -122,24 +122,18 @@ class Sharing_Admin {
 	}
 
 	/**
-	 * Register Sharing settings menu page.
+	 * Register Sharing settings menu page in offline mode.
 	 */
 	public function subscription_menu() {
-		if ( ! defined( 'IS_WPCOM' ) || ! IS_WPCOM ) {
-			$active = Jetpack::get_active_modules();
-			if (
-				! in_array( 'publicize', $active, true )
-				&& ! current_user_can( 'manage_options' )
-			) {
-				return;
-			}
+		if ( ! ( new Status() )->is_offline_mode() ) {
+			return;
 		}
 
 		add_submenu_page(
 			'options-general.php',
 			__( 'Sharing Settings', 'jetpack' ),
 			__( 'Sharing', 'jetpack' ),
-			'publish_posts',
+			'manage_options',
 			'sharing',
 			array( $this, 'wrapper_admin_page' )
 		);
@@ -730,7 +724,7 @@ class Sharing_Admin {
 			new Share_Reddit( 'reddit', array() ),
 		);
 		?>
-		
+
 		<div class="share_manage_options">
 			<br class="clearing" />
 			<h2><?php esc_html_e( 'Sharing Buttons', 'jetpack' ); ?></h2>
@@ -791,6 +785,10 @@ class Sharing_Admin {
  * @return bool
  */
 function jetpack_post_sharing_get_value( array $post ) {
+	if ( ! isset( $post['id'] ) ) {
+		return false;
+	}
+
 	// if sharing IS disabled on this post, enabled=false, so negate the meta
 	return (bool) ! get_post_meta( $post['id'], 'sharing_disabled', true );
 }

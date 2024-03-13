@@ -72,6 +72,7 @@ import {
 	showMyJetpack,
 	isWooCommerceActive,
 	userIsSubscriber,
+	getJetpackManageInfo,
 } from 'state/initial-state';
 import {
 	updateLicensingActivationNoticeDismiss as updateLicensingActivationNoticeDismissAction,
@@ -89,7 +90,7 @@ import {
 	fetchSiteData as fetchSiteDataAction,
 	fetchSitePurchases as fetchSitePurchasesAction,
 } from 'state/site';
-import AgenciesCard from './components/agencies-card';
+import JetpackManageBanner from './components/jetpack-manage-banner';
 
 const recommendationsRoutes = [
 	'/recommendations',
@@ -120,9 +121,14 @@ const recommendationsRoutes = [
 	'/recommendations/welcome-videopress',
 	'/recommendations/welcome-search',
 	'/recommendations/welcome-scan',
+	'/recommendations/welcome-social-basic',
+	'/recommendations/welcome-social-advanced',
+	'/recommendations/welcome-social-image-generator',
 	'/recommendations/welcome-golden-token',
 	'/recommendations/backup-activated',
 	'/recommendations/scan-activated',
+	'/recommendations/unlimited-sharing-activated',
+	'/recommendations/social-advanced-activated',
 	'/recommendations/antispam-activated',
 	'/recommendations/videopress-activated',
 	'/recommendations/search-activated',
@@ -444,7 +450,11 @@ class Main extends React.Component {
 					redirectUri="admin.php?page=jetpack"
 					from={ ( searchParams && searchParams.get( 'from' ) ) || this.props.connectingUserFrom }
 				>
-					<ul>
+					{ /*
+					Since the list style type is set to none, `role=list` is required for VoiceOver (on Safari) to announce the list.
+					See: https://www.scottohara.me/blog/2019/01/12/lists-and-safari.html
+					*/ }
+					<ul role="list">
 						<li>{ __( 'Receive instant downtime alerts', 'jetpack' ) }</li>
 						<li>{ __( 'Automatically share your content on social media', 'jetpack' ) }</li>
 						<li>{ __( 'Let your subscribers know when you post', 'jetpack' ) }</li>
@@ -509,7 +519,11 @@ class Main extends React.Component {
 						) }
 					</p>
 
-					<ul>
+					{ /*
+					Since the list style type is set to none, `role=list` is required for VoiceOver (on Safari) to announce the list.
+					See: https://www.scottohara.me/blog/2019/01/12/lists-and-safari.html
+					*/ }
+					<ul role="list">
 						<li>{ __( 'Measure your impact with Jetpack Stats', 'jetpack' ) }</li>
 						<li>{ __( 'Speed up your site with optimized images', 'jetpack' ) }</li>
 						<li>{ __( 'Protect your site against bot attacks', 'jetpack' ) }</li>
@@ -623,9 +637,14 @@ class Main extends React.Component {
 			case '/recommendations/welcome-videopress':
 			case '/recommendations/welcome-search':
 			case '/recommendations/welcome-scan':
+			case '/recommendations/welcome-social-basic':
+			case '/recommendations/welcome-social-advanced':
 			case '/recommendations/welcome-golden-token':
 			case '/recommendations/backup-activated':
 			case '/recommendations/scan-activated':
+			case '/recommendations/unlimited-sharing-activated':
+			case '/recommendations/social-advanced-activated':
+			case '/recommendations/welcome-social-image-generator':
 			case '/recommendations/antispam-activated':
 			case '/recommendations/videopress-activated':
 			case '/recommendations/search-activated':
@@ -687,7 +706,7 @@ class Main extends React.Component {
 		);
 	}
 
-	shouldShowAgenciesCard() {
+	shouldShowJetpackManageBanner() {
 		const { site_count } = this.props.connectedWpComUser;
 
 		// Only show on dashboard when users are managing 2 or more sites
@@ -880,8 +899,11 @@ class Main extends React.Component {
 					/>
 
 					{ this.renderMainContent( this.props.location.pathname ) }
-					{ this.shouldShowAgenciesCard() && (
-						<AgenciesCard path={ this.props.location.pathname } discountPercentage={ 60 } />
+					{ this.shouldShowJetpackManageBanner() && (
+						<JetpackManageBanner
+							path={ this.props.location.pathname }
+							isAgencyAccount={ this.props.jetpackManage.isAgencyAccount }
+						/>
 					) }
 					{ this.shouldShowSupportCard() && <SupportCard path={ this.props.location.pathname } /> }
 					{ this.shouldShowAppsCard() && <AppsCard /> }
@@ -933,6 +955,7 @@ export default connect(
 			partnerCoupon: getPartnerCoupon( state ),
 			currentRecommendationsStep: getInitialRecommendationsStep( state ),
 			isSubscriber: userIsSubscriber( state ),
+			jetpackManage: getJetpackManageInfo( state ),
 		};
 	},
 	dispatch => ( {

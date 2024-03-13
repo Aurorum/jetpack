@@ -29,7 +29,7 @@ const debug = debugFactory( 'jetpack-ai-assistant:upgrade-prompt' );
  * @param {UpgradePromptProps} props - Component props.
  * @returns {React.ReactNode} the Nudge component with the prompt.
  */
-const DefaultUpgradePrompt = ( { placement = null }: UpgradePromptProps ): React.ReactNode => {
+const DefaultUpgradePrompt = ( { placement = null }: UpgradePromptProps ): React.JSX.Element => {
 	const { checkoutUrl, autosaveAndRedirect, isRedirecting } = useAICheckout();
 	const canUpgrade = canUserPurchasePlan();
 	const {
@@ -58,6 +58,13 @@ const DefaultUpgradePrompt = ( { placement = null }: UpgradePromptProps ): React
 		},
 		[ autosaveAndRedirect, currentTier, requestsCount, tracks, placement ]
 	);
+
+	const handleContactUsClick = useCallback( () => {
+		debug( 'contact us', placement );
+		tracks.recordEvent( 'jetpack_ai_upgrade_contact_us', {
+			placement: placement,
+		} );
+	}, [ tracks, placement ] );
 
 	if ( ! canUpgrade ) {
 		return (
@@ -97,6 +104,7 @@ const DefaultUpgradePrompt = ( { placement = null }: UpgradePromptProps ): React
 					align={ null }
 					title={ null }
 					context={ null }
+					goToCheckoutPage={ handleContactUsClick }
 				/>
 			);
 		}
@@ -162,7 +170,7 @@ const DefaultUpgradePrompt = ( { placement = null }: UpgradePromptProps ): React
  *
  * @returns {React.ReactNode} the Nudge component with the prompt.
  */
-const VIPUpgradePrompt = (): React.ReactNode => {
+const VIPUpgradePrompt = (): React.JSX.Element => {
 	return (
 		<Nudge
 			buttonText={ null }

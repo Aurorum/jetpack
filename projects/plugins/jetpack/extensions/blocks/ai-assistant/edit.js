@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { AIControl } from '@automattic/jetpack-ai-client';
+import { AIControl, UpgradeMessage } from '@automattic/jetpack-ai-client';
 import { useAnalytics } from '@automattic/jetpack-shared-extension-utils';
 import { useBlockProps, useInnerBlocksProps, InspectorControls } from '@wordpress/block-editor';
 import { rawHandler, createBlock, parse } from '@wordpress/blocks';
@@ -29,12 +29,14 @@ import { useEffect, useRef } from 'react';
  */
 import UsagePanel from '../../plugins/ai-assistant-plugin/components/usage-panel';
 import { USAGE_PANEL_PLACEMENT_BLOCK_SETTINGS_SIDEBAR } from '../../plugins/ai-assistant-plugin/components/usage-panel/types';
+import { PLAN_TYPE_FREE, usePlanType } from '../../shared/use-plan-type';
 import ConnectPrompt from './components/connect-prompt';
 import FeedbackControl from './components/feedback-control';
 import ImageWithSelect from './components/image-with-select';
 import ToolbarControls from './components/toolbar-controls';
 import UpgradePrompt from './components/upgrade-prompt';
 import { getStoreBlockId } from './extensions/ai-assistant/with-ai-assistant';
+import useAICheckout from './hooks/use-ai-checkout';
 import useAiFeature from './hooks/use-ai-feature';
 import useSuggestionsFromOpenAI from './hooks/use-suggestions-from-openai';
 import { isUserConnected } from './lib/connection';
@@ -74,7 +76,18 @@ export default function AIAssistantEdit( { attributes, setAttributes, clientId, 
 		};
 	}, [] );
 
-	const { isOverLimit, requireUpgrade, increaseRequestsCount } = useAiFeature();
+	const {
+		isOverLimit,
+		requireUpgrade,
+		increaseRequestsCount,
+		requestsCount,
+		requestsLimit,
+		currentTier,
+	} = useAiFeature();
+	const requestsRemaining = Math.max( requestsLimit - requestsCount, 0 );
+
+	const { autosaveAndRedirect } = useAICheckout();
+	const planType = usePlanType( currentTier );
 
 	const focusOnPrompt = () => {
 		/*
@@ -306,6 +319,7 @@ export default function AIAssistantEdit( { attributes, setAttributes, clientId, 
 
 	const handleSend = () => {
 		handleGetSuggestion( 'userPrompt' );
+		tracks.recordEvent( 'jetpack_ai_assistant_block_generate', { feature: 'ai-assistant' } );
 	};
 
 	const handleAccept = () => {
@@ -316,7 +330,7 @@ export default function AIAssistantEdit( { attributes, setAttributes, clientId, 
 		}
 	};
 
-	const handleAcceptContent = async () => {
+	const replaceContent = async () => {
 		let newGeneratedBlocks = [];
 		if ( ! useGutenbergSyntax ) {
 			/*
@@ -350,26 +364,40 @@ export default function AIAssistantEdit( { attributes, setAttributes, clientId, 
 		}
 	};
 
+	const handleAcceptContent = () => {
+		replaceContent();
+		tracks.recordEvent( 'jetpack_ai_assistant_block_accept', { feature: 'ai-assistant' } );
+	};
+
 	const handleAcceptTitle = () => {
 		if ( isInBlockEditor ) {
 			editPost( { title: attributes.content ? attributes.content.trim() : '' } );
 			removeBlock( clientId );
+			tracks.recordEvent( 'jetpack_ai_assistant_block_accept', { feature: 'ai-assistant' } );
 		} else {
 			handleAcceptContent();
 		}
 	};
 
-	const handleTryAgain = () => {
+	const handleDiscard = () => {
+		const isDismiss = attributes?.content === getBlock( clientId ).attributes?.content;
 		setAttributes( {
 			content: attributes?.originalContent,
 			promptType: undefined,
 			messages: attributes?.originalMessages,
 		} );
+		replaceContent();
+		if ( isDismiss ) {
+			tracks.recordEvent( 'jetpack_ai_assistant_block_dismiss' );
+		} else {
+			tracks.recordEvent( 'jetpack_ai_assistant_block_discard', { feature: 'ai-assistant' } );
+		}
 	};
 
 	const handleStopSuggestion = () => {
 		stopSuggestion();
 		focusOnPrompt();
+		tracks.recordEvent( 'jetpack_ai_assistant_block_stop', { feature: 'ai-assistant' } );
 	};
 
 	const handleImageRequest = () => {
@@ -417,6 +445,33 @@ export default function AIAssistantEdit( { attributes, setAttributes, clientId, 
 		</>
 	);
 
+	const error = (
+		<>
+			{ errorData?.message && ! errorDismissed && errorData?.code !== 'error_quota_exceeded' && (
+				<Notice
+					status={ errorData.status }
+					isDismissible={ false }
+					className="jetpack-ai-assistant__error"
+				>
+					{ errorData.message }
+				</Notice>
+			) }
+		</>
+	);
+
+	const trackUpgradeClick = useCallback(
+		event => {
+			event.preventDefault();
+			tracks.recordEvent( 'jetpack_ai_upgrade_button', {
+				current_tier_slug: currentTier?.slug,
+				requests_count: requestsCount,
+				placement: 'jetpack_ai_assistant_block',
+			} );
+			autosaveAndRedirect( event );
+		},
+		[ tracks, currentTier, requestsCount, autosaveAndRedirect ]
+	);
+
 	return (
 		<KeyboardShortcuts
 			bindGlobal
@@ -429,16 +484,6 @@ export default function AIAssistantEdit( { attributes, setAttributes, clientId, 
 			} }
 		>
 			<div { ...blockProps }>
-				{ errorData?.message && ! errorDismissed && errorData?.code !== 'error_quota_exceeded' && (
-					<Notice
-						status={ errorData.status }
-						isDismissible={ false }
-						className="jetpack-ai-assistant__error"
-					>
-						{ errorData.message }
-					</Notice>
-				) }
-
 				{ contentIsLoaded && ! useGutenbergSyntax && (
 					<div className="jetpack-ai-assistant__content">
 						<RawHTML>{ markdownConverter.render( attributes.content ) }</RawHTML>
@@ -563,7 +608,7 @@ export default function AIAssistantEdit( { attributes, setAttributes, clientId, 
 					onSend={ handleSend }
 					onStop={ handleStopSuggestion }
 					onAccept={ handleAccept }
-					onDiscard={ handleTryAgain }
+					onDiscard={ handleDiscard }
 					state={ requestingState }
 					isTransparent={ requireUpgrade || ! connected }
 					showButtonLabels={ ! isMobileViewport }
@@ -572,6 +617,17 @@ export default function AIAssistantEdit( { attributes, setAttributes, clientId, 
 					showGuideLine={ contentIsLoaded }
 					showRemove={ attributes?.content?.length > 0 }
 					bannerComponent={ banner }
+					errorComponent={ error }
+					customFooter={
+						// Only show the upgrade message on each 5th request or if it's the first request - and only if the user is on the free plan
+						( requestsRemaining % 5 === 0 || requestsCount === 1 ) &&
+						planType === PLAN_TYPE_FREE ? (
+							<UpgradeMessage
+								requestsRemaining={ requestsRemaining }
+								onUpgradeClick={ trackUpgradeClick }
+							/>
+						) : null
+					}
 				/>
 
 				{ ! loadingImages && resultImages.length > 0 && (
