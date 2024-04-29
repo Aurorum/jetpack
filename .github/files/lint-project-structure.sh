@@ -22,7 +22,6 @@ for F in README.md .gitkeep .gitignore; do
 done
 
 declare -A PROJECT_PREFIXES=(
-	['editor-extensions']='Block'
 	['github-actions']='Action'
 	['packages']='Package'
 	['plugins']='Plugin'
@@ -221,10 +220,6 @@ for PROJECT in projects/*/*; do
 		if [[ ! -e "$PROJECT/.phan/config.php" ]]; then
 			EXIT=1
 			echo "::error file=$PROJECT/.phan/config.php::Project $SLUG has PHP files but does not contain .phan/config.php. Refer to Static Analysis in docs/monorepo.md."
-		fi
-		if [[ ! -e "$PROJECT/.phan/baseline.php" ]]; then
-			EXIT=1
-			echo "::error file=$PROJECT/.phan/baseline.php::Project $SLUG has PHP files but does not contain .phan/baseline.php. Refer to Static Analysis in docs/monorepo.md."
 		fi
 	fi
 
@@ -433,6 +428,20 @@ if [[ -n "$DUPS" ]]; then
 	done <<<"$DUPS"
 fi
 
+# - package.json name fields should not be repeated.
+debug "Checking for duplicate package.json names"
+DUPS="$(jq -rn 'reduce inputs as $i ({}; if $i.name then .[$i.name] |= ( . // [] ) + [ input_filename ] else . end) | to_entries[] | .key as $key | .value | select( length > 1 ) | ( [ .[] | capture("^projects/(?<s>.*)/package\\.json$").s ] | .[-1] |= "and " + . | join( if length > 2 then ", " else " " end ) ) as $slugs | .[] | [ ., $key, $slugs ] | @tsv' projects/*/*/package.json projects/*/*/tests/e2e/package.json)"
+if [[ -n "$DUPS" ]]; then
+	while IFS=$'\t' read -r FILE KEY SLUGS; do
+		LINE=$(grep --line-number --max-count=1 '^	"name":' "$FILE" || true)
+		if [[ -n "$LINE" ]]; then
+			LINE=",line=${LINE%%:*}"
+		fi
+		EXIT=1
+		echo "::error file=$FILE$LINE::Name $KEY is in use in package.json by $SLUGS. They must be deduplicated."
+	done <<<"$DUPS"
+fi
+
 # - Text domains from plugins should not be used in packages.
 debug "Checking package textdomain usage vs plugin slugs"
 PLUGDOMAINS="$(jq -n 'reduce inputs as $i ({}; .[$i.extra["wp-plugin-slug"] // $i.extra["wp-theme-slug"] // ""] = ( input_filename | sub("^projects/(?<slug>.*)/composer\\.json$";"\(.slug)"))) | .[""] |= empty' projects/plugins/*/composer.json)"
@@ -496,6 +505,36 @@ for FILE in $(git -c core.quotepath=off ls-files 'projects/packages/**/.eslintrc
 			echo "::error file=$FILE$LINE::Eslint config sets textdomain \"$DOM\", but $SLUG's composer.json does not set \`.extra.textdomain\`."
 		else
 			echo "::error file=$FILE$LINE::Eslint config sets textdomain \"$DOM\", but $SLUG's composer.json sets domain \"$DOM2\"."
+		fi
+	fi
+done
+
+# - Text domains in block.json should match composer.json.
+debug "Checking textdomain usage in block.json"
+for FILE in $(git -c core.quotepath=off ls-files 'projects/packages/**/block.json' 'projects/plugins/**/block.json'); do
+	[[ "$FILE" == projects/packages/blocks/tests/php/fixtures/* ]] && continue  # Ignore test fixtures
+
+	DOM="$(jq -r '.textdomain' "$FILE")"
+	DIR="$FILE"
+	while ! [[ "$DIR" =~ ^projects/[^/]*/[^/]*$ ]]; do
+		DIR="${DIR%/*}"
+	done
+	SLUG="${DIR#projects/}"
+	if [[ "$SLUG" == plugins/* ]]; then
+		DOM2="$(jq -r '.extra["wp-plugin-slug"] // .extra["wp-theme-slug"] // ""' "$DIR/composer.json")"
+	else
+		DOM2="$(jq -r '.extra.textdomain // ""' "$DIR/composer.json")"
+	fi
+	if [[ "$DOM" != "$DOM2" ]]; then
+		EXIT=1
+		LINE=$(jq --stream 'if length == 1 then .[0][:-1] else .[0] end | if . == ["textdomain"] then input_line_number - 1 else empty end' package.json)
+		if [[ -n "$LINE" ]]; then
+			LINE=",line=${LINE%%:*}"
+		fi
+		if [[ -z "$DOM2" ]]; then
+			echo "::error file=$FILE$LINE::block.json sets textdomain \"$DOM\", but $SLUG's composer.json does not set \`.extra.textdomain\`."
+		else
+			echo "::error file=$FILE$LINE::block.json sets textdomain \"$DOM\", but $SLUG's composer.json sets domain \"$DOM2\"."
 		fi
 	fi
 done
