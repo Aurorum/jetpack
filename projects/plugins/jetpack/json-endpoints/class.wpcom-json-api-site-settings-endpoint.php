@@ -1028,7 +1028,11 @@ class WPCOM_JSON_API_Site_Settings_Endpoint extends WPCOM_JSON_API_Endpoint {
 					break;
 
 				case 'jetpack_subscriptions_reply_to':
-					$to_set_value = (string) in_array( $value, array( 'no-reply', 'author' ), true ) ? $value : 'no-reply';
+					require_once JETPACK__PLUGIN_DIR . 'modules/subscriptions/class-settings.php';
+					$to_set_value = Automattic\Jetpack\Modules\Subscriptions\Settings::is_valid_reply_to( $value )
+						? $value
+						: Automattic\Jetpack\Modules\Subscriptions\Settings::get_default_reply_to();
+
 					update_option( 'jetpack_subscriptions_reply_to', (string) $to_set_value );
 					$updated[ $key ] = (bool) $value;
 					break;
@@ -1165,6 +1169,22 @@ class WPCOM_JSON_API_Site_Settings_Endpoint extends WPCOM_JSON_API_Endpoint {
 					$updated[ $key ] = $value;
 					break;
 
+				case 'migration_source_site_domain':
+					// If we get an empty value, delete the option
+					if ( empty( $value ) ) {
+						delete_option( 'migration_source_site_domain' );
+						break;
+					}
+
+					// If we get a non-url value, don't update the option.
+					if ( wp_http_validate_url( $value ) === false ) {
+						break;
+					}
+
+					update_option( 'migration_source_site_domain', $value );
+					$updated[ $key ] = $value;
+					break;
+
 				default:
 					// allow future versions of this endpoint to support additional settings keys.
 					if ( has_filter( 'site_settings_endpoint_update_' . $key ) ) {
@@ -1275,7 +1295,8 @@ class WPCOM_JSON_API_Site_Settings_Endpoint extends WPCOM_JSON_API_Endpoint {
 	protected function get_subscriptions_reply_to_option() {
 		$reply_to = get_option( 'jetpack_subscriptions_reply_to', null );
 		if ( $reply_to === null ) {
-			return 'no-reply';
+			require_once JETPACK__PLUGIN_DIR . 'modules/subscriptions/class-settings.php';
+			return Automattic\Jetpack\Modules\Subscriptions\Settings::get_default_reply_to();
 		}
 		return $reply_to;
 	}

@@ -1143,7 +1143,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 *
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 *
-	 * @return array|wp-error
+	 * @return array|WP_Error
 	 */
 	public static function is_site_verified_and_token( $request ) {
 		/**
@@ -1252,7 +1252,7 @@ class Jetpack_Core_Json_Api_Endpoints {
 	 *
 	 * @param WP_REST_Request $request The request sent to the WP REST API.
 	 *
-	 * @return array|wp-error
+	 * @return array|WP_Error
 	 */
 	public static function dismiss_notice( $request ) {
 		$notice = $request['notice'];
@@ -2787,6 +2787,13 @@ class Jetpack_Core_Json_Api_Endpoints {
 			),
 			'wordads_second_belowpost'              => array(
 				'description'       => esc_html__( 'Display second ad below post?', 'jetpack' ),
+				'type'              => 'boolean',
+				'default'           => 1,
+				'validate_callback' => __CLASS__ . '::validate_boolean',
+				'jp_group'          => 'wordads',
+			),
+			'wordads_inline_enabled'                => array(
+				'description'       => esc_html__( 'Display inline ad within post content?', 'jetpack' ),
 				'type'              => 'boolean',
 				'default'           => 1,
 				'validate_callback' => __CLASS__ . '::validate_boolean',

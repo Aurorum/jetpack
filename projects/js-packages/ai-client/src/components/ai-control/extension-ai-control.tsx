@@ -17,9 +17,10 @@ import './style.scss';
  * Types
  */
 import type { RequestingStateProp } from '../../types.js';
-import type { ReactElement } from 'react';
+import type { ReactElement, MouseEvent } from 'react';
 
 type ExtensionAIControlProps = {
+	className?: string;
 	disabled?: boolean;
 	value: string;
 	placeholder?: string;
@@ -30,12 +31,14 @@ type ExtensionAIControlProps = {
 	error?: string;
 	requestsRemaining?: number;
 	showUpgradeMessage?: boolean;
+	wrapperRef?: React.MutableRefObject< HTMLDivElement | null >;
 	onChange?: ( newValue: string ) => void;
 	onSend?: ( currentValue: string ) => void;
 	onStop?: () => void;
 	onClose?: () => void;
 	onUndo?: () => void;
-	onUpgrade?: () => void;
+	onUpgrade?: ( event: MouseEvent< HTMLButtonElement > ) => void;
+	onTryAgain?: () => void;
 };
 
 /**
@@ -47,6 +50,7 @@ type ExtensionAIControlProps = {
  */
 export function ExtensionAIControl(
 	{
+		className,
 		disabled = false,
 		value = '',
 		placeholder = '',
@@ -57,12 +61,14 @@ export function ExtensionAIControl(
 		error,
 		requestsRemaining,
 		showUpgradeMessage = false,
+		wrapperRef,
 		onChange,
 		onSend,
 		onStop,
 		onClose,
 		onUndo,
 		onUpgrade,
+		onTryAgain,
 	}: ExtensionAIControlProps,
 	ref: React.MutableRefObject< HTMLInputElement >
 ): ReactElement {
@@ -116,9 +122,16 @@ export function ExtensionAIControl(
 		onUndo?.();
 	}, [ onUndo ] );
 
-	const upgradeHandler = useCallback( () => {
-		onUpgrade?.();
-	}, [ onUpgrade ] );
+	const upgradeHandler = useCallback(
+		( event: MouseEvent< HTMLButtonElement > ) => {
+			onUpgrade?.( event );
+		},
+		[ onUpgrade ]
+	);
+
+	const tryAgainHandler = useCallback( () => {
+		onTryAgain?.();
+	}, [ onTryAgain ] );
 
 	useKeyboardShortcut(
 		'enter',
@@ -190,7 +203,7 @@ export function ExtensionAIControl(
 
 	let message = null;
 	if ( error ) {
-		message = <ErrorMessage error={ error } onTryAgainClick={ sendHandler } />;
+		message = <ErrorMessage error={ error } onTryAgainClick={ tryAgainHandler } />;
 	} else if ( showUpgradeMessage ) {
 		message = (
 			<UpgradeMessage requestsRemaining={ requestsRemaining } onUpgradeClick={ upgradeHandler } />
@@ -201,6 +214,7 @@ export function ExtensionAIControl(
 
 	return (
 		<AIControl
+			className={ className }
 			disabled={ disabled || loading }
 			value={ value }
 			placeholder={ placeholder }
@@ -210,6 +224,7 @@ export function ExtensionAIControl(
 			actions={ actions }
 			message={ message }
 			promptUserInputRef={ promptUserInputRef }
+			wrapperRef={ wrapperRef }
 		/>
 	);
 }
