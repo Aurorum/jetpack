@@ -13,7 +13,7 @@ namespace Automattic\Jetpack;
  * Jetpack_Mu_Wpcom main class.
  */
 class Jetpack_Mu_Wpcom {
-	const PACKAGE_VERSION = '5.33.0-alpha';
+	const PACKAGE_VERSION = '5.36.0-alpha';
 	const PKG_DIR         = __DIR__ . '/../';
 	const BASE_DIR        = __DIR__ . '/';
 	const BASE_FILE       = __FILE__;
@@ -43,6 +43,7 @@ class Jetpack_Mu_Wpcom {
 		add_action( 'plugins_loaded', array( __CLASS__, 'load_wpcom_command_palette' ) );
 		add_action( 'plugins_loaded', array( __CLASS__, 'load_wpcom_admin_interface' ) );
 		add_action( 'plugins_loaded', array( __CLASS__, 'load_wpcom_site_management_widget' ) );
+		add_action( 'plugins_loaded', array( __CLASS__, 'load_replace_site_visibility' ) );
 
 		// This feature runs only on simple sites.
 		if ( defined( 'IS_WPCOM' ) && IS_WPCOM ) {
@@ -86,16 +87,18 @@ class Jetpack_Mu_Wpcom {
 		require_once __DIR__ . '/features/marketplace-products-updater/class-marketplace-products-updater.php';
 		require_once __DIR__ . '/features/media/heif-support.php';
 		require_once __DIR__ . '/features/site-editor-dashboard-link/site-editor-dashboard-link.php';
+		require_once __DIR__ . '/features/wpcom-block-editor/class-jetpack-wpcom-block-editor.php';
+		require_once __DIR__ . '/features/wpcom-block-editor/functions.editor-type.php';
 		require_once __DIR__ . '/features/wpcom-site-menu/wpcom-site-menu.php';
 		require_once __DIR__ . '/features/wpcom-themes/wpcom-themes.php';
-		require_once __DIR__ . '/features/calypso-locale-sync/sync-wp-admin-to-calypso.php';
-		require_once __DIR__ . '/features/calypso-locale-sync/sync-calypso-to-wp-admin.php';
 
 		// Initializers, if needed.
 		\Marketplace_Products_Updater::init();
-		// Only load the Calypsoify feature on WoA sites.
+		// Only load the Calypsoify and Masterbar features on WoA sites.
 		if ( class_exists( '\Automattic\Jetpack\Status\Host' ) && ( new \Automattic\Jetpack\Status\Host() )->is_woa_site() ) {
 			\Automattic\Jetpack\Calypsoify\Jetpack_Calypsoify::get_instance();
+			// This is temporary. After we cleanup Masterbar on WPCOM we should load Masterbar for Simple sites too.
+			\Automattic\Jetpack\Masterbar\Main::init();
 		}
 		// Gets autoloaded from the Scheduled_Updates package.
 		if ( class_exists( 'Automattic\Jetpack\Scheduled_Updates' ) ) {
@@ -314,5 +317,12 @@ class Jetpack_Mu_Wpcom {
 		if ( function_exists( 'wpcom_is_nav_redesign_enabled' ) && wpcom_is_nav_redesign_enabled() ) {
 			require_once __DIR__ . '/features/wpcom-site-management-widget/class-wpcom-site-management-widget.php';
 		}
+	}
+
+	/**
+	 * Load Replace Site Visibility feature.
+	 */
+	public static function load_replace_site_visibility() {
+		require_once __DIR__ . '/features/replace-site-visibility/replace-site-visibility.php';
 	}
 }
